@@ -11,11 +11,6 @@ def main():
     print(request.remote_addr)
     return render_template("battleship.html.j2", **data)
 
-@app.route("/farida")
-def main():
-    data = {}
-    return render_template("farida.html", **data)
-
 @app.route("/move", methods=['POST'])
 def move():
     receivedData = request.get_json(force=True)
@@ -40,6 +35,11 @@ def handle_hit(hit):
     print('received hit: ' + str(hit))
     jsonData = {"hit" : True, "player": hit["player"], "move": hit["move"]}
     emit('receive_message', jsonData, broadcast=True)
+
+@app.route("/salma")
+def salma():
+    data = {}
+    return render_template("salma.html", **data)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port="8888")
