@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 10px;
+        }
+        rect {
+            stroke: black;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <input id="player" type="text" placeholder="Player Name"/> 
+    </div>
+    <div>
+        <svg id="svg" width="1500" height="1500"></svg>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        let player = "";
+        let yourTurn = true;
+        var socket = io();
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            sendMessage();
+        });
+        socket.on('receive_message', function(msg) {
+            console.log('Received message: ', msg)
+
+            // update fire map
+            yourTurn = true;
+            if (msg.hasOwnProperty("hit")) {
+                console.log(msg);
+                console.log(msg.hit);
+                if (msg.hit == true) {
+                    if (msg.player != player) {
+                        document.getElementById(`${msg.move}`).style.fill = "orange";
+                    }
+                }
+            } else if (msg.hasOwnProperty("move")) {
+                // update ships map
+                if (msg.hasOwnProperty("player")) {
+                    if (msg.player != player) {
+                        if (document.getElementById(msg.move).style.fill == "blue") {
+                            document.getElementById(msg.move).style.fill = "red";
+                            console.log("hit");
+                            console.log(`F${msg.move}`);
+                            sendHit({"hit" : true, "player": player, "move": `F${msg.move}`});
+                            
+                        } else {
+                            document.getElementById(msg.move).style.fill = "yellow";
+                        }
+                        yourTurn = true;
+                    } 
+                }   
+            }
+        })
+        function sendMessage(msg="hello") {
+            socket.emit('message', msg);
+        }
+        function sendJson(msg={"data": "hello"}) {
+            socket.emit('json', msg);
+        }
+        function sendHit(msg={"data": "hello"}) {
+            socket.emit('hit', msg);
+        }
+    </script>
+    <script>
+        let startY = 200;
+        let svg = document.getElementById("svg");
+        let w = 50;
+        let h = 50;
+        let x = 50;
+        let y = startY;
+        for (let j=0; j<10; j++) {
+            for (let i=0; i<10; i++) {
+                svg.innerHTML += `<rect id="${j}${i}" width=${w} height=${h} x=${x} y=${y} data-name="${j}${i}"></rect>`
+                x = x + w;
+            }
+            x = 50;
+            y = y + h;
+        }
+        let letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+        let numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+
+        y = startY + 28;
+        x = 30;
+        for (let letter of letters) {
+            svg.innerHTML += `<text x = ${x} y=${y} font-size="40" dominant-baseline="middle" text-anchor="middle" point-events="none">${letter}</text>`
+            y = y + h;
+        }
+        y = startY - 20;
+        x = 75;
+        for (let number of numbers) {
+            svg.innerHTML += `<text x = ${x} y=${y} font-size="40" dominant-baseline="middle" text-anchor="middle" point-events="none">${number}</text>`
+            x = x + w;
+        }
+
+        x = 700;
+        y = startY;
+        for (let j=0; j<10; j++) {
+            for (let i=0; i<10; i++) {
+                svg.innerHTML += `<rect id="F${j}${i}" width=${w} height=${h} x=${x} y=${y} data-name="${j}${i}" data-type="fire" ></rect>`
+                x = x + w;
+            }
+            x = 700;
+            y = y + h;
+        }
+        y = startY + 28;
+        x = 680;
+        for (let letter of letters) {
+            svg.innerHTML += `<text x = ${x} y=${y} font-size="40" dominant-baseline="middle" text-anchor="middle" point-events="none">${letter}</text>`
+            y = y + h;
+        }
+        y = startY - 20;
+        x = 725;
+        for (let number of numbers) {
+            svg.innerHTML += `<text x = ${x} y=${y} font-size="40" dominant-baseline="middle" text-anchor="middle" point-events="none">${number}</text>`
+            x = x + w;
+        }
+
+        svg.addEventListener("click", (e) => {
+            if (yourTurn) {
+                player = document.getElementById("player").value;
+                if (e.target.getAttribute("data-type") == "fire") {
+                    let move = e.target.getAttribute("data-name");
+                    sendJson({"move" : move, "player": player});
+
+                    {# const asyncRequestObject = new XMLHttpRequest();
+                    asyncRequestObject.open("POST", "{{ url_for('move') }}");
+                    asyncRequestObject.send(JSON.stringify({"name": "hango", "move": move}));
+                    function handleSuccess () {
+                        response = JSON.parse(this.responseText);
+                        console.log(response.data, response.player, response.move);
+
+                    }
+                    function handleError() {
+                        console.log("error");
+                    }
+                    asyncRequestObject.addEventListener("load",  handleSuccess);
+                    asyncRequestObject.addEventListener("error", handleError); #}
+
+                }
+                e.target.style.fill = "blue";
+            }
+        })
+
+
+        
+
+    </script>    
+</body>
+
+</html>
