@@ -11,6 +11,12 @@ def main():
     print(request.remote_addr)
     return render_template("battleship.html.j2", **data)
 
+@app.route("/farida")
+def main():
+    data = {}
+    print(request.remote_addr)
+    return render_template("farida.html", **data)
+
 @app.route("/move", methods=['POST'])
 def move():
     receivedData = request.get_json(force=True)
